@@ -1,0 +1,14 @@
+{
+  "region": "Jiangsu",
+  "plan_name": "Residential time-of-use tariff (tier-one reference)",
+  "currency": "CNY/kWh",
+  "source_name": "Jiangsu residential tariff reference supplied with the project",
+  "source_url": "https://js.people.cn/n2/2021/0205/c360302-34567601.html",
+  "policy_update_url": "https://www.jiangsu.gov.cn/art/2025/5/6/art_90848_11558232.html",
+  "verified_on": "2026-07-21",
+  "periods": [
+    {"kind": "peak", "label": "Peak", "start": "08:00", "end": "21:00", "rate": 0.5583},
+    {"kind": "valley", "label": "Off-peak", "start": "21:00", "end": "08:00", "rate": 0.3583}
+  ],
+  "note": "Historical project reference only. Rates depend on customer category, usage tier and supply contract. Verify the applicable rate with the electricity supplier."
+}

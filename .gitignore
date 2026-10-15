@@ -1,0 +1,17 @@
+.DS_Store
+__MACOSX/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pio/
+.vscode/
+.env
+!.env.example
+local_config.h
+*.db
+*.db-shm
+*.db-wal
+*.d
+*.o
+work/

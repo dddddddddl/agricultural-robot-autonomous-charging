@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#090a0a">
+  <meta name="description" content="Charging dashboard with vehicle voltage estimates, charging schedules and reference tariffs">
+  <title>Charging Console</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+  <main class="page">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Back to top">
+        <span class="brand-mark"><i></i></span>
+        <span><strong>Charging Console</strong><small>Robot energy management</small></span>
+      </a>
+      <div class="top-status">
+        <button id="location-button" class="location-button" type="button"><span class="location-dot"></span><span id="location-label">Find local tariff</span></button>
+        <div id="connection" class="connection offline"><i></i><span>Connecting</span></div>
+      </div>
+    </header>
+
+    <section id="alert" class="alert hidden" role="alert"></section>
+
+    <section id="top" class="hero glass-panel">
+      <div class="hero-image" role="img" aria-label="Robot illustration"></div>
+      <div class="hero-vignette"></div>
+      <div class="hero-content">
+        <p class="kicker">Estimated vehicle charge</p>
+        <div class="soc-line"><strong id="vehicle-soc">--</strong><span>%</span></div>
+        <p id="battery-caption" class="hero-caption">Waiting for vehicle</p>
+        <div class="hero-actions">
+          <button id="hero-smart-toggle" class="hero-primary" type="button">Enable smart charging</button>
+          <button id="report" class="hero-secondary" type="button">View weekly report</button>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div><span>Charge limit</span><strong id="target">90%</strong></div>
+        <div><span>Charging power</span><strong id="power-delivery">Not charging</strong></div>
+        <div><span>Estimated completion</span><strong id="completion">Waiting for charge estimate</strong></div>
+        <div><span>Current phase</span><strong id="plan-phase">Standby</strong></div>
+      </div>
+      <span id="vehicle-freshness" class="hero-freshness">No vehicle data</span>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="glass-panel smart-card">
+        <div class="section-head">
+          <div><p class="kicker">Usage prediction</p><h2>Charging schedule</h2></div>
+          <label class="switch" aria-label="Toggle smart charging">
+            <input id="smart-toggle" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+        <p id="smart-summary" class="lead-copy">Enable to schedule charging around observed usage and expected departure.</p>
+        <div class="plan-timeline">
+          <div class="plan-step active"><i></i><span>Start charging</span><strong id="plan-charge-start">--:--</strong></div>
+          <div class="plan-step"><i></i><span>Charge to 80%</span><strong>Hold charge</strong></div>
+          <div class="plan-step"><i></i><span>Top off before departure</span><strong id="topoff-start">--:--</strong></div>
+          <div class="plan-step"><i></i><span>Expected departure</span><strong id="predicted-departure">--:--</strong></div>
+        </div>
+        <div class="plan-controls">
+          <label for="departure-time">Usual departure time<input id="departure-time" type="time" value="09:00"></label>
+          <button id="regenerate-plan" type="button">Regenerate plan</button>
+        </div>
+      </article>
+
+      <article class="glass-panel tariff-card">
+        <div class="section-head">
+          <div><p class="kicker">Local reference tariff</p><h2>Tariff guidance</h2></div>
+          <span id="tariff-band" class="status-chip">Checking</span>
+        </div>
+        <div class="tariff-price"><span>Reference rate</span><strong id="current-tariff">--</strong><small>CNY/kWh</small></div>
+        <div id="tariff-periods" class="tariff-periods"></div>
+        <p id="tariff-next" class="tariff-advice">Location is used to match a reference tariff.</p>
+        <p id="tariff-source" class="source-note">Your electricity bill determines the actual rate.</p>
+      </article>
+    </section>
+
+    <section class="operations-grid">
+      <article class="glass-panel status-card">
+        <div class="section-head">
+          <div><p class="kicker">Charging dock</p><h2>Operating status</h2></div>
+          <span id="charge-state" class="status-chip">Waiting for data</span>
+        </div>
+        <div class="metric-grid">
+          <div class="metric feature"><span>Live power</span><strong id="power">-- W</strong><small id="max-power-note">Waiting for charging</small></div>
+          <div class="metric"><span>Contact temperature</span><strong id="temperature">-- ℃</strong></div>
+          <div class="metric"><span>Dock contact</span><strong id="micro">Unconfirmed</strong></div>
+          <div class="metric"><span>Emergency stop</span><strong id="estop">Normal</strong></div>
+          <div class="metric"><span>System fault</span><strong id="fault">None</strong></div>
+          <div class="metric"><span>Vehicle charging</span><strong id="vehicle-charging">Unknown</strong></div>
+        </div>
+      </article>
+
+      <article class="glass-panel control-card">
+        <div class="section-head">
+          <div><p class="kicker">Command requests</p><h2>Charging settings</h2></div>
+          <span id="remaining" class="status-chip">Waiting for estimate</span>
+        </div>
+        <label class="limit-control" for="limit">
+          <span>Charge limit <strong id="limit-value">90%</strong></span>
+          <input id="limit" type="range" min="80" max="100" value="90">
+          <span class="range-labels"><i>80%</i><i>Charge target</i><i>100%</i></span>
+        </label>
+        <div class="button-row">
+          <button id="save-limit" class="primary" type="button">Save limit</button>
+          <button data-command="start" type="button">Request start</button>
+          <button data-command="stop" type="button">Request stop</button>
+          <button data-command="clear-fault" class="quiet" type="button">Clear fault</button>
+        </div>
+        <p id="toast" class="toast">System ready</p>
+      </article>
+    </section>
+
+    <section class="glass-panel history-panel">
+      <div class="section-head">
+        <div><p class="kicker">Recent history</p><h2>Charging trends</h2></div>
+        <button id="refresh-history" class="quiet" type="button">Refresh</button>
+      </div>
+      <div class="chart-grid">
+        <div class="chart"><div class="chart-title"><span>Vehicle charge</span><strong>Estimated from vehicle voltage</strong></div><canvas id="soc-chart"></canvas></div>
+        <div class="chart"><div class="chart-title"><span>Charging power</span><strong>Watts</strong></div><canvas id="power-chart"></canvas></div>
+        <div class="chart"><div class="chart-title"><span>Contact temperature</span><strong>Degrees Celsius</strong></div><canvas id="temp-chart"></canvas></div>
+      </div>
+    </section>
+
+    <section id="report-panel" class="glass-panel report-panel hidden">
+      <div class="report-heading">
+        <div><p class="kicker">Analysis</p><h2>Weekly charging report</h2><p>Recorded activity, supporting data and suggested actions.</p></div>
+        <button id="close-report" class="quiet" type="button">Close report</button>
+      </div>
+      <div id="report-loading" class="report-loading hidden"><i></i><span>Preparing the charging report...</span></div>
+      <div id="report-content" class="report-content"></div>
+    </section>
+
+    <details class="connection-settings glass-panel">
+      <summary><span>Vehicle connection</span><strong id="ros-status">Disconnected</strong></summary>
+      <div class="connection-body">
+        <label for="ros-url">Vehicle address<input id="ros-url" value="192.168.1.105" autocomplete="off" spellcheck="false"></label>
+        <button id="ros-connect" class="primary" type="button">Connect vehicle</button>
+        <p id="ros-log">Enter the vehicle address to connect.</p>
+      </div>
+    </details>
+
+    <footer><span>Charging Console</span><p>Monitor charging and plan for the next mission.</p></footer>
+  </main>
+  <script src="/static/vendor/roslib.min.js?v=1.3.0-local-window"></script>
+  <script>
+    // Some containers export roslib to global instead of window.
+    // Expose the same window.ROSLIB used by ordinary browsers.
+    if (!window.ROSLIB && typeof global !== "undefined" && global.ROSLIB) {
+      window.ROSLIB = global.ROSLIB;
+    }
+  </script>
+  <script src="/static/app.js?v=20260722-power-voltage"></script>
+</body>
+</html>
