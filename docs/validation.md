@@ -13,7 +13,7 @@ Checks below were performed during repository preparation on **October 15, 2026*
 | JavaScript renderer check | Passed | Missing SOC remains unknown; valid zero and measured data display correctly |
 | Camera calibration re-run | Passed | All 31 original inputs, original corner geometry, scratch outputs |
 | ESP32-S3 build | Passed | Complete firmware compile/link/image generation, no physical flashing |
-| Local browser review | Passed | English dashboard with no hardware connected; unknown charge retained |
+| Local browser review | Passed | English dashboard and offline report rendered with no hardware connected; unknown charge retained |
 
 ### Calibration re-run
 

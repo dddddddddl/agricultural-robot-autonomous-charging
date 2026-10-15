@@ -8,6 +8,8 @@ The robot handles physical alignment; the dock checks local contact and sensor c
 
 *Indoor prototype photograph from the project poster. The application context is agricultural harvesting; the supplied evidence does not establish outdoor reliability.*
 
+[Download the original demonstration video (MP4, 178 MB)](https://github.com/dddddddddl/agricultural-robot-autonomous-charging/releases/download/portfolio-v1.0/autonomous_charging_demonstration_original_zh.mp4) · [English project poster](docs/presentation/autonomous_docking_project_poster.pptx)
+
 ## Start here
 
 | To understand… | Open… |
