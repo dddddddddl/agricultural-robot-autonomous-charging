@@ -1,42 +1,35 @@
-# Navigation and mission integration notes
+# Navigation and docking integration
 
-This document preserves the useful Nav2 design from the supplied technical notes. The actual navigation packages are missing from the provided ZIPs, so the interfaces below are **integration requirements/documented design**, not runnable components in this repository.
+The robot software has two separate components:
 
-## Intended return-to-charge sequence
+- [`auto_charge_manager`](../robot/navigation/auto_charge/README.md): battery-triggered Nav2 return to a staging pose.
+- [`aruco_docking.py`](../robot/vision/README.md): standalone rear-camera reverse alignment.
 
-1. Read battery state and require repeated low samples before interrupting the current task.
-2. Lock out ordinary waypoint requests while returning to charge.
-3. Cancel active navigation actions and confirm cancellation before sending a new goal.
-4. Use `NavigateToPose` to reach a measured pre-docking pose aligned with the station.
-5. Transfer velocity ownership to visual docking.
-6. Require explicit docking/charging confirmation and apply bounded timeouts/retries.
-7. Release or restore mission state according to a defined recovery policy.
+The return manager publishes `/start_docking` after arriving at the staging pose. The vision controller does not subscribe to that signal, so the handover still needs to be connected. Neither module provides the complete return, contact confirmation and mission-resumption cycle by itself.
 
-The notes describe a 25% low threshold, five consecutive samples and a 35% reset threshold. `sensor_msgs/BatteryState.percentage` uses 0–1 units; these source-design values are not a verified configuration on a supplied running vehicle.
+## Existing return behavior
 
-## Documented interfaces
+Five consecutive BatteryState samples at or below 25% trigger return. The node publishes `/return_to_charge_active = true`, requests cancellation of the three navigation action types, waits 800 ms and sends a `NavigateToPose` staging goal. It retries failures up to two additional times.
 
-| Interface | Intended purpose |
-|---|---|
-| `/battery_status` / `sensor_msgs/msg/BatteryState` | Battery monitoring for return decisions |
-| `/navigate_to_pose` / `nav2_msgs/action/NavigateToPose` | Return to pre-docking pose |
-| `/navigate_through_poses` and `/follow_waypoints` | Existing navigation actions to cancel/arbitrate |
-| `/return_to_charge_active` / `std_msgs/msg/Bool` | Mission lock/gate state |
-| `/start_docking` / `std_msgs/msg/Bool` | Authorize visual takeover |
-| `/docking_complete` / `std_msgs/msg/Bool` | Completion feedback described by later notes |
+Nav2 success moves the node to AT_STAGING and publishes `/start_docking = true`. Battery CHARGING/FULL status sets CHARGING and clears return-active. Once no longer charging, a reading at or above 35% can re-arm detection from CHARGING or FAILED.
 
-None of the last three interfaces is implemented by the supplied standalone vision node. A boolean trigger alone also does not define timeout, result, cancellation or failure semantics; those need an integration contract.
+Those defaults are configurable; they are code values, not measurements of the actual vehicle battery or station pose.
 
-## Navigation constraints
+## Interfaces to connect
 
-The earlier navigation document identifies ROS 2 Humble, an Ackermann chassis, map-frame waypoint coordinates and separate waypoint/low-battery branches. It describes pixel-to-map conversion using map resolution, dimensions, origin and origin yaw. It also identifies gaps in occupancy/safety-radius checking, action-cancel confirmation, return-task priority and mission persistence.
+| Interface | Current implementation | Integration work |
+|---|---|---|
+| `/battery_status` | Return manager subscribes to BatteryState | Connect the actual battery source with 0–1 percentage units |
+| Nav2 actions | Return manager cancels existing goals and sends staging goal | Verify cancellation completion and return priority |
+| `/return_to_charge_active` | Published by return manager | External mission gate must reject ordinary goals during return |
+| `/start_docking` | True published on successful arrival | Add an authorization path and control ownership for vision |
+| `/docking_complete` | Not implemented by either component | Define completion, timeout, failure and reset feedback |
+| `/robot_charging_flag` | Vision subscribes and stops when true | Verify its relationship to the BatteryState charging status |
 
-The intended TF chain is `map → odom → base frame → sensors`, with a single publisher for each transform responsibility. Map origin, camera extrinsics, staging pose and actual base frame must be measured for the deployed vehicle. No sample coordinates from an old document are promoted into an executable configuration here.
+## Deployment configuration still needed
 
-A pre-docking pose must allow an Ackermann vehicle to approach with feasible curvature. Planner/controller motion models and minimum turning radii must agree; a design mention of Smac Hybrid A* or MPPI does not establish the installed Nav2 configuration because the corresponding YAML is absent.
+The waypoint mission source, station map, full Nav2 configuration and vehicle drivers are not included. Use the actual vehicle's localization and Nav2 bringup. Measure the staging pose in the map frame and align it so the Ackermann platform has room to reverse toward the dock.
 
-## Later visual-planner descriptions
+Planner/controller motion models and turning-radius constraints must match the chassis. A mention of Smac Hybrid A* or MPPI in design notes does not establish the installed configuration. The standalone visual controller uses lateral offset and bearing with low-pass filtering, hysteresis and angular slew limiting; it does not implement the later v14/v16 controllers described in other notes.
 
-A later note describes v14 Kalman filtering with yaw/lateral control and v16 visual Hybrid A* with forward/reverse segments and limited gear changes. Neither implementation was found in the supplied archive set. Their claimed yaw/gear-change behavior must not be attributed to `robot/vision/aruco_docking.py`, which implements low-pass-filtered lateral/bearing reverse control.
-
-The earlier document names `Mingdong24/Agricultural_vehicle_nav_backend` as a navigation repository reference. No external code was fetched or reassigned to this project's owner. Recovering the intended source and its authorship/version would be the next step toward a complete mission-level release.
+The return node also retains pending-work and cancellation limitations described in its [module README](../robot/navigation/auto_charge/README.md#current-integration-limits). Wiring the two topic names alone would not resolve motion arbitration, stale callbacks or mission recovery.

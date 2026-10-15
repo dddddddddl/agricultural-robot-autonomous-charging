@@ -15,6 +15,7 @@ The robot handles physical alignment; the dock checks local contact and sensor c
 | To understand… | Open… |
 |---|---|
 | The project and its component boundaries | [System architecture](docs/architecture.md) |
+| Low-battery return to the charging station | [Return manager](robot/navigation/auto_charge/README.md) |
 | Reverse docking and marker pose estimation | [Vision controller](robot/vision/README.md) |
 | Sensor checks, state transitions and relay control | [ESP32-S3 firmware](firmware/esp32s3/README.md) |
 | The dashboard, telemetry API and charging schedule | [Web console](web/README.md) |
@@ -25,6 +26,7 @@ The robot handles physical alignment; the dock checks local contact and sensor c
 
 ## What is included
 
+- **Low-battery return:** a ROS 2 C++ node monitors battery state, cancels navigation goals, sends a Nav2 goal to the charging station staging pose, and publishes `/start_docking` on arrival.
 - **Visual docking:** OpenCV detects `DICT_4X4_50` marker ID 0 and estimates its pose using calibrated OV9281 intrinsics. The supplied controller reverses at low speed, filters lateral error and bearing, applies alignment hysteresis, and stops on the configured distance or vehicle charging flag.
 - **Embedded charging control:** a PlatformIO/Arduino project for ESP32-S3 reads a VL53L1X, micro-switch, INA226, analog NTC and emergency-stop input. The local state machine owns the relay. HTTP uploads and command polling run in a separate FreeRTOS task.
 - **Monitoring and planning:** FastAPI, SQLite and a plain JavaScript frontend provide telemetry, history, estimated vehicle charge, staged charging schedules, reference tariff display and optional model-assisted reports. The offline report path requires no API key.
@@ -32,7 +34,7 @@ The robot handles physical alignment; the dock checks local contact and sensor c
 
 ### Source scope
 
-The available executable robot source is a **standalone vision docking node**. Project documents also describe low-battery Nav2 return, mission arbitration and later visual planners, but their corresponding ROS packages are absent from the supplied archives. This repository therefore does not claim to reproduce the complete navigation-to-charge-to-resume mission. See the [implementation coverage table](docs/architecture.md#implementation-coverage).
+The robot software includes a Nav2 low-battery return manager and a standalone vision docking node. The return manager publishes `/start_docking`, but the vision node does not subscribe to it. Automatic handover, docking completion feedback and mission resumption still need integration. See the [implementation coverage table](docs/architecture.md#implementation-coverage).
 
 ## System overview
 
@@ -94,7 +96,7 @@ The [robot guide](robot/README.md) explains the ROS 2 prerequisites and standalo
 | Camera dataset and saved calibration | 31 views at 1280 × 720; 11 × 8 inner corners; 10 mm squares |
 | Re-run of supplied calibration | OpenCV RMS **0.13130584 px**; script-specific mean error **0.01395080**; [metric definition](robot/calibration/README.md#calibration-results) |
 | Firmware build | ESP32-S3 build passed; RAM 47,348 bytes and flash 974,513 bytes in the recorded environment |
-| Host software checks | 8 Python checks plus the JavaScript missing-data renderer check passed |
+| Host software checks | 8 Python checks plus the JavaScript missing-data renderer check passed; the ROS return package has not been built or run on this host |
 | Original prototype evidence | [English poster](docs/presentation/autonomous_docking_project_poster.pptx), [original report](docs/report/project_report_original.docx), [video guide](docs/media/README.md) |
 
 Calibration error measures image reprojection, **not physical docking accuracy**. Docking success rate, docking time, outdoor performance and physical safety response timing were not measured in this repository preparation. Original project claims and newly run checks are distinguished in the [validation record](docs/validation.md).
@@ -107,7 +109,7 @@ The supplied SURF poster credits **Siyuan Lin, Xunuo Zhuang and Yuhan Qiu**, wit
 
 ## Limitations
 
-- Full Nav2 return/mission packages, deployment maps and vehicle drivers are not included.
+- The return manager is included; waypoint mission execution, deployment maps, vehicle drivers and the full Nav2 configuration are not included.
 - The standalone controller has no `/start_docking` authorization subscription or `/docking_complete` result publisher. Running it alongside Nav2 requires velocity arbitration.
 - Firmware charge-complete thresholds and battery/charge-rate assumptions require calibration on the actual platform.
 - Scheduling uses estimated vehicle charge and observed usage times; the supplied scheduler does not optimize against tariff periods.

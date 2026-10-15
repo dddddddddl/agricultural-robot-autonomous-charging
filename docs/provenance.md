@@ -5,7 +5,8 @@
 | Component | Selection and evidence |
 |---|---|
 | Dock firmware | The IoT archive's `ESP32S3.zip`; all meaningful source/config files match the expanded `Auto_charge/ESP32S3` snapshot |
-| Vision and calibration | Expanded `Auto_charge/aruco` and `camera_test`; matching copies in the nested archive were deduplicated |
+| Low-battery return | `dev` package `src/auto_charge` at commit `4a6e4c5528ae5fa616463bc72d7b3da0a3279375`; C++ logic and package build configuration retained |
+| Vision and calibration | Expanded `Auto_charge/aruco` and `camera_test`; the separately supplied `aruco_docking3.py` is byte-identical to that archived script |
 | Web backend/frontend | Expanded `Auto_charge/web`; executable backend/frontend match the nested copy |
 | PCB | Supplied EasyEDA Pro export and July 14 Gerber set; retained as separate design artifacts without assuming they represent the identical manufactured revision |
 | Mechanical files | Supplied model archive; all distinct model/drawing/render files preserved with English paths |
@@ -16,7 +17,7 @@ The nested `Auto_charge(2)` firmware differs in two thresholds: its maximum bus 
 
 A separate `charging-dock.zip` contains an alternative ToF stability implementation and patch. Its use on hardware and chronological relationship to the selected firmware were not established. It remains in the unchanged local source archive rather than becoming a second competing firmware entry point. A standalone JSON-builder snippet in the nested web copy is redundant with the selected firmware's status builder.
 
-`waypoint.zip` and `charging2.zip` each contain only an empty directory. Document descriptions of the packages that should have been there are retained in the English integration notes, not converted into invented source files.
+The initial `waypoint.zip` and `charging2.zip` contain empty directories. The low-battery return package was later added from the identified `dev` snapshot. Waypoint mission source and full deployment configuration are still absent. The return package's existing maintainer and unresolved license declaration are retained; no new license was assigned.
 
 ## Changes made for this repository
 
@@ -31,7 +32,7 @@ A separate `charging-dock.zip` contains an alternative ToF stability implementat
 - Added module guides and focused host checks. These checks and documentation improvements are repository-preparation work, not evidence of original project experiments.
 - Preserved the supplied ROSLIB bundle and added its upstream BSD license notice.
 
-No relay thresholds, GPIO assignments, motion constants, state transitions or steering conventions were changed during preparation. No fake development history or repository-wide license was added.
+No relay thresholds, GPIO assignments, motion constants, state transitions or steering conventions were changed during preparation. The added return manager retains its C++ program logic, with English comments and a descriptive package summary. Its README documents the existing behavior and integration gaps. No repository-wide license was added.
 
 ## Excluded from the public source tree
 

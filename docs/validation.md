@@ -13,6 +13,7 @@ Checks below were performed during repository preparation on **October 15, 2026*
 | JavaScript renderer check | Passed | Missing SOC remains unknown; valid zero and measured data display correctly |
 | Camera calibration re-run | Passed | All 31 original inputs, original corner geometry, scratch outputs |
 | ESP32-S3 build | Passed | Complete firmware compile/link/image generation, no physical flashing |
+| Added return package, static checks | Passed | XML/CMake dependency and source-path consistency; C++ program tokens preserved after comment translation; new docking attachment matches the existing controller |
 | Local browser review | Passed | English dashboard and offline report rendered with no hardware connected; unknown charge retained |
 
 ### Calibration re-run
@@ -72,6 +73,8 @@ pio run -d firmware/esp32s3
 See the [calibration guide](../robot/calibration/README.md) for replaying the image dataset in a working copy.
 
 ## Not verified
+
+The added `auto_charge` return package was not compiled: ROS 2, ament and colcon are unavailable on this macOS host. Package metadata, CMake references and translation-only source preservation were checked instead.
 
 No ROS node/rosbridge transport, camera hardware, vehicle, loaded charger or physical dock was connected. No relay was energized or firmware flashed. Accordingly, these checks do not establish:
 

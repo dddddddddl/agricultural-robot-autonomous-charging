@@ -1,6 +1,6 @@
 # Robot-side software
 
-This directory contains the executable vision docking snapshot and camera tools. Read [vision/README.md](vision/README.md) for the controller and [calibration/README.md](calibration/README.md) for the dataset and intrinsics.
+This directory contains the ROS 2 low-battery return manager, vision docking controller and camera tools. Start with [navigation/auto_charge/README.md](navigation/auto_charge/README.md) for return-to-charge, [vision/README.md](vision/README.md) for reverse docking, or [calibration/README.md](calibration/README.md) for camera intrinsics.
 
 The intended robot is an Ackermann platform with a rear-facing OV9281 camera. The docking node uses ROS 2 `rclpy`, `geometry_msgs/Twist` and `std_msgs/Bool`/`Int8`, plus NumPy and OpenCV's ArUco module. The project navigation notes identify ROS 2 Humble, but no ROS distribution was executed during the host-only checks.
 
@@ -16,6 +16,6 @@ If using a virtual environment with a system ROS installation, ensure that ROS P
 
 ## Source boundary
 
-`vision/aruco_docking.py` was supplied as a standalone script. The supplied `waypoint.zip` and `charging2.zip` contain empty directories. No navigation package, package manifest, launch file, map or Nav2 configuration was recovered from them.
+`navigation/auto_charge` contains the low-battery return package, including its C++ node, `package.xml` and `CMakeLists.txt`. `vision/aruco_docking.py` is the standalone reverse-docking script; the newly supplied attachment matches its original archived source exactly.
 
-The [navigation integration notes](../docs/navigation-integration.md) preserve the useful architecture and interface requirements from the source documents. They are not a replacement for the missing implementation. In particular, this script must not compete with Nav2 for `/cmd_vel`.
+The return manager publishes `/start_docking` on arrival, but the vision script does not consume that topic. It also does not publish `/docking_complete`. Connect the modules through an explicit handover and velocity ownership scheme before running them together. The [integration notes](../docs/navigation-integration.md) describe the current gap. Waypoint source, deployment maps and Nav2 planner/controller configuration remain absent.

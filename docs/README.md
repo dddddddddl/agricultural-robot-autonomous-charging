@@ -5,7 +5,8 @@ Start with the root [README](../README.md), then choose the depth you need.
 | Material | What to look for |
 |---|---|
 | [Architecture](architecture.md) | Physical/control/service boundaries and actual source coverage |
-| [Navigation integration](navigation-integration.md) | Intended low-battery return workflow and the missing ROS package boundary |
+| [Return manager](../robot/navigation/auto_charge/README.md) | Build, parameters, battery-triggered Nav2 return and its current limits |
+| [Navigation integration](navigation-integration.md) | Return/vision handover and remaining deployment work |
 | [Wiring](../hardware/wiring.md) | Power path, selected GPIOs and hardware revision conflicts |
 | [Validation](validation.md) | Newly executed checks and what remains untested |
 | [Provenance](provenance.md) | Version selection, exclusions and preparation changes |

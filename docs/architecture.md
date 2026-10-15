@@ -13,8 +13,8 @@ The agricultural robot charging problem has two different control scales: naviga
 | Dashboard and rosbridge voltage view | Browser frontend and ROSLIB | Supplied; local browser rendering checked; no real rosbridge connection tested |
 | Calibration pipeline | Tools, 31 inputs, overlays and saved intrinsics | Supplied; scratch calibration re-run reproduced saved metrics |
 | PCB and enclosure | EasyEDA Pro, Gerbers, STL, drawings | Preserved design files; no electrical/manufacturing validation performed |
-| Low-battery Nav2 return manager | Described in technical notes and poster | Corresponding source packages absent from provided archives |
-| Nav2/vision authorization and completion handshake | `/start_docking`, `/docking_complete` described in later notes | Absent from supplied standalone vision script |
+| Low-battery Nav2 return manager | C++ `auto_charge` package | Source, package manifest and CMake file included in `robot/navigation/auto_charge/`; ROS build/runtime not verified on this host |
+| Nav2/vision handover | Return manager publishes `/start_docking` after Nav2 success | Vision node does not subscribe; `/docking_complete` and automatic handover remain unimplemented |
 | Kalman/yaw controller and visual Hybrid A* | Described as later v14/v16 implementations | Not included as executable source |
 | Automatic mission resumption | Described at project level; earlier navigation note lists gaps | Not reproducible from the supplied source set |
 
@@ -26,7 +26,7 @@ The rear OV9281 camera detects a known-size ArUco marker. Calibrated camera intr
 
 The supplied controller low-pass filters lateral offset and bearing. Separate entry/exit tolerances reduce alignment-state oscillation. During alignment, the Ackermann platform still reverses slowly because it cannot turn in place. Angular slew limiting smooths steering commands. Target loss, range limits and the charging flag produce stop decisions.
 
-That controller is a local standalone module. It does not generate a map-level path or arbitrate Nav2 goals.
+That controller is a local standalone module. The separate `auto_charge_manager` requests a map-level return through Nav2. Its arrival signal is not yet wired into the vision controller.
 
 ## Dock sensing and power control
 
@@ -66,4 +66,4 @@ Vehicle charge is estimated from the original piecewise voltage curve. Dock volt
 
 ## Engineering boundaries
 
-The supplied code has no complete deployment launch system, vehicle drivers, map, camera extrinsics or documented velocity mux. Hardware notes also conflict with the selected firmware's GPIO map. These boundaries are explicit so the repository can be evaluated as a collection of implemented modules and preserved prototype evidence without implying an independently reproduced full robot mission.
+The return manager, vision controller and dock firmware are present as separate modules. A complete deployment still needs vehicle drivers, a map, measured staging pose, Nav2 settings and a velocity ownership mechanism. The return manager waits a fixed interval after cancellation requests and does not confirm cancellation results or enforce a waypoint lock by itself. Hardware notes also conflict with the selected firmware's GPIO map.
