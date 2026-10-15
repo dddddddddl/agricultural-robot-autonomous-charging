@@ -80,6 +80,29 @@ class BackendTests(unittest.TestCase):
         self.assertTrue(plan['ok'])
         self.assertNotRegex(str(plan), r'[\u3400-\u9fff]')
 
+    def test_empty_report_keeps_unmeasured_conditions_unknown(self):
+        report = self.client.post('/api/report/generate').json()['report']
+        self.assertIn('No dock telemetry', report['battery_assessment']['analysis'])
+        self.assertEqual(report['risks'][0]['level'], 'Unknown')
+        self.assertIn('configured fallback', report['charging_habits']['analysis'])
+        self.assertNotIn('Typical charging start', report['charging_habits']['analysis'])
+        self.assertIn('No valid vehicle voltage', report['battery_assessment']['evidence'][1])
+
+    def test_idle_contact_is_not_reported_as_charging_failure(self):
+        self.client.post('/api/status', json={
+            'state': 'IDLE', 'fault': 'NONE', 'relayOn': False,
+            'micro_switch_stable': False,
+        })
+        report = self.client.post('/api/report/generate').json()['report']
+        contact = next(risk for risk in report['risks'] if risk['title'] == 'Unconfirmed contact intervals')
+        self.assertIn('includes an idle dock', contact['detail'])
+        self.assertNotIn('contact interruptions;', contact['detail'])
+
+    def test_unselected_location_is_labeled_as_default_reference(self):
+        tariff = self.client.get('/api/tariff').json()
+        self.assertIsNone(tariff['location'])
+        self.assertIn('location not provided', tariff['pricing_status_cn'])
+
     def test_request_validation_and_reference_tariff_region(self):
         self.assertEqual(self.client.post('/api/config/charge-limit', json={
             'charge_limit_percent': 120,

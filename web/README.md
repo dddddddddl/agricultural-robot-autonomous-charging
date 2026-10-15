@@ -77,7 +77,9 @@ The schedule uses median observed charging/departure times over 30 days, or an o
 
 The current scheduler **does not use tariff periods to optimize the schedule**. Tariff display and advice are separate features. A remote START releases the firmware STOP hold; it cannot clear `COMPLETE` or bypass sensors. Physical pause/resume behavior therefore requires integration testing.
 
-- **Reports and prediction:** setting `DEEPSEEK_API_KEY` enables requests to the configured model provider. Report inputs include summarized telemetry and, if selected, location/tariff information. Leaving the key empty uses local rules. Paid/cloud calls were not exercised in validation.
+Local reports label configured fallback times separately from observed usage and keep missing measurements unknown. Runs of unconfirmed contact samples can include an idle dock and do not establish charging interruptions.
+
+- **Reports and prediction:** setting `DEEPSEEK_API_KEY` enables requests to the configured model provider. Report inputs include summarized telemetry and, if selected, location/tariff information. Leaving the key empty uses local rules. Paid/cloud calls were not exercised in validation; model-generated explanations are not verified measurements and require review against the recorded data.
 - **Location:** requested only through the location button. Selected coordinates are sent to the backend and OpenStreetMap Nominatim for reverse geocoding. Do not grant location access unless you want that feature.
 - **Tariffs:** `TARIFF_API_URL` and optional key can supply a live service. Otherwise the provided Jiangsu residential reference is used. Its original reference date and rates are retained; they were not reverified as current prices.
 

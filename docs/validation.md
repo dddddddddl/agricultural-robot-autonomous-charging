@@ -1,6 +1,6 @@
 # Validation record
 
-Checks below were performed during repository preparation on **October 15, 2026**, on an Apple Silicon macOS host. They are separate from the original project's prototype demonstrations.
+Initial checks were performed during repository preparation on **October 15, 2026**, on an Apple Silicon macOS host. Source provenance and report wording were reviewed on **October 16, 2026**, with the expanded host checks passing that day. These checks are separate from the original project's prototype demonstrations; the firmware build and calibration results below are from October 15.
 
 ## Completed checks
 
@@ -8,13 +8,19 @@ Checks below were performed during repository preparation on **October 15, 2026*
 |---|---|---|
 | Python source parsing | Passed | Syntax of the distributed Python modules |
 | JavaScript syntax | Passed | `node --check web/frontend/app.js` |
-| Backend host checks | 5 passed | Fresh DB/unknown data, telemetry mapping, vehicle voltage SOC, one-shot command compatibility, English offline output, request validation and regional tariff behavior |
+| Backend host checks | 8 passed | Fresh DB/unknown data, telemetry mapping, vehicle voltage SOC, one-shot command compatibility, English offline output, request validation, regional tariff behavior and report distinctions between observations, missing data and defaults |
 | Vision host checks | 3 passed | Stop/reverse decisions, synthetic projected-marker pose and consistency of calibration/marker artifacts |
 | JavaScript renderer check | Passed | Missing SOC remains unknown; valid zero and measured data display correctly |
 | Camera calibration re-run | Passed | All 31 original inputs, original corner geometry, scratch outputs |
 | ESP32-S3 build | Passed | Complete firmware compile/link/image generation, no physical flashing |
 | Added return package, static checks | Passed | XML/CMake dependency and source-path consistency; C++ program tokens preserved after comment translation; new docking attachment matches the existing controller |
 | Local browser review | Passed | English dashboard and offline report rendered with no hardware connected; unknown charge retained |
+
+### Source and report review
+
+All 173 tracked files were accounted for: 110 match selected source artifacts, 36 are translated or adapted source files, and 27 are added supporting files such as guides, tests and configuration examples. The executable token comparison of 23 firmware C++/header files found only the documented credential extraction and configuration diagnostic change beyond comments and whitespace.
+
+The local report previously described fallback times as typical usage and could show a reassuring risk status without telemetry. It also described runs of unconfirmed contact samples, including idle-dock samples, as contact interruptions. These labels now distinguish recorded observations, configured defaults and unavailable evidence. The default tariff region is also identified when no location was supplied. Three added API regression checks cover these cases; the full Python suite now has 11 passing checks. No hardware control thresholds or motion logic changed in this review.
 
 ### Calibration re-run
 

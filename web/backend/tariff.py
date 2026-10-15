@@ -97,7 +97,10 @@ def get_tariff(location=None):
             "region_match": region_match,
             "current_period": current,
             "next_cheapest_window": next_valley,
-            "pricing_status_cn": "Reference region matched" if region_match else "Local tariff requires verification",
+            "pricing_status_cn": (
+                "Default reference region; location not provided" if location is None else
+                "Reference region matched" if region_match else "Local tariff requires verification"
+            ),
         }
     )
     return result

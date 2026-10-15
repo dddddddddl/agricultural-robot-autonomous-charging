@@ -67,6 +67,7 @@ def build_summary():
             ),
             "high_temperature_incidents": _incident_count(rows, lambda row: row.get("temp_warning")),
             "fault_incidents": _incident_count(rows, lambda row: row.get("fault") not in (None, "", "NONE")),
+            # Legacy key: counts unconfirmed-contact sample runs, including an idle dock.
             "contact_interruptions": _incident_count(rows, lambda row: not row.get("micro_switch_stable")),
         },
         "latest_vehicle_soc": vehicle_rows[-1]["soc_percent"] if vehicle_rows else None,
@@ -101,13 +102,15 @@ def _local_report(summary, source_note="Rule-based analysis"):
     session_count = stats["charge_sessions"]
     if session_count:
         executive = (
-            f"Recorded {session_count} charging sessions over seven days, totaling about {stats['charging_hours']} hours. "
+            f"Available records from the last seven days contain {session_count} charging sessions, "
+            f"of which {stats['completed_sessions']} are complete. "
+            f"Completed sessions total about {stats['charging_hours']} hours. "
             "Charge is estimated from vehicle ROS voltage using the original 24 V/6S curve."
         )
     else:
         executive = (
-            "No complete charging sessions were recorded over seven days. Current observations use live status and default usage times. "
-            "Usage predictions update as connected-vehicle records accumulate."
+            "No charging sessions are available in the last seven days. "
+            "Any displayed schedule times are configured fallbacks unless supported by recorded usage."
         )
     habit = summary["habit_profile"]
     tariff_recommendation = "The local tariff is unverified. Check the customer category before scheduling charging."
@@ -122,16 +125,37 @@ def _local_report(summary, source_note="Rule-based analysis"):
     if stats["fault_incidents"]:
         risks.append({"level": "Attention", "title": "Charging faults", "detail": f"Recorded {stats['fault_incidents']} separate fault events; inspect their fault codes."})
     if stats["contact_interruptions"]:
-        risks.append({"level": "Attention", "title": "Docking contact stability", "detail": f"Recorded {stats['contact_interruptions']} contact interruptions; inspect contact cleanliness and parking alignment."})
+        risks.append({
+            "level": "Note", "title": "Unconfirmed contact intervals",
+            "detail": (
+                f"Recorded {stats['contact_interruptions']} runs of samples without confirmed contact. "
+                "This includes an idle dock and does not by itself establish a charging interruption."
+            ),
+        })
     if stats["high_temperature_incidents"]:
         risks.append({"level": "Elevated", "title": "Temperature events", "detail": f"Recorded {stats['high_temperature_incidents']} temperature-warning events; inspect before resuming charging."})
-    if not risks:
-        risks.append({"level": "Normal", "title": "No repeated event pattern detected", "detail": "The current records show no repeated temperature-warning or fault events."})
+    if not stats["telemetry_points"]:
+        risks = [{
+            "level": "Unknown", "title": "No dock telemetry available",
+            "detail": "Dock faults and temperature events cannot be assessed without telemetry.",
+        }]
+    elif not risks:
+        risks.append({
+            "level": "No flags", "title": "No flagged events in available samples",
+            "detail": "The available samples contain no flagged temperature warnings or faults; this is not a hardware safety test.",
+        })
     return {
         "headline": "Weekly charging summary",
         "executive_summary": executive,
         "charging_habits": {
-            "analysis": f"Typical charging start: {habit['fallback_charge_time']}; estimated departure: {habit['fallback_departure_time']}.",
+            "analysis": (
+                (f"Median recorded charging start: {habit['fallback_charge_time']}. "
+                 if habit['charge_session_count'] else
+                 f"No observed charging-start times; configured fallback: {habit['fallback_charge_time']}. ")
+                + (f"Median recorded departure proxy: {habit['fallback_departure_time']}."
+                   if habit['departure_sample_count'] else
+                   f"No observed departure times; configured fallback: {habit['fallback_departure_time']}.")
+            ),
             "evidence": [
                 f"Charging-session samples over 30 days: {habit['charge_session_count']}",
                 f"Departure-time samples over 30 days: {habit['departure_sample_count']}",
@@ -139,13 +163,18 @@ def _local_report(summary, source_note="Rule-based analysis"):
         },
         "battery_assessment": {
             "status": "Insufficient data" if not summary["data_quality"]["has_completed_sessions"] else "Operating observations available",
-            "analysis": "Charging and temperature observations are available, but battery health, true capacity and lifetime cannot be inferred.",
+            "analysis": (
+                "Only recorded charging and temperature samples can be described. "
+                "Battery health, true capacity and lifetime cannot be inferred."
+                if stats["telemetry_points"] else
+                "No dock telemetry is available for assessment. Battery health, capacity and lifetime are unknown."
+            ),
             "evidence": [
                 f"Maximum recorded temperature: {stats['max_temperature_c']} C" if stats["max_temperature_c"] is not None else "No valid temperature samples",
                 (
                     f"Latest vehicle voltage: {summary['latest_vehicle_voltage_v']:.2f} V; charge estimated from the voltage curve"
                     if isinstance(summary.get("latest_vehicle_voltage_v"), (int, float))
-                    else "Charge estimated from the vehicle ROS voltage curve"
+                    else "No valid vehicle voltage sample is available for charge estimation"
                 ),
             ],
         },

@@ -29,6 +29,7 @@ The initial `waypoint.zip` and `charging2.zip` contain empty directories. The lo
 - Kept missing vehicle voltage/charge unknown in the frontend instead of letting JavaScript convert `null` into zero.
 - Made geolocation explicitly user-initiated and removed the report button's implicit location request.
 - Labeled tariff data as a historical project reference and removed an unsupported UI implication that the existing scheduler optimizes against tariff periods.
+- Tightened local report labels to distinguish configured times from observed habits, absent telemetry from a no-flags result, and unconfirmed contact samples from established charging interruptions. The default tariff region is identified when no location was supplied.
 - Added module guides and focused host checks. These checks and documentation improvements are repository-preparation work, not evidence of original project experiments.
 - Preserved the supplied ROSLIB bundle and added its upstream BSD license notice.
 
