@@ -13,3 +13,4 @@
 *.npz binary
 *.epro2 binary
 *.stl binary
+hardware/pcb/gerbers/* -text -diff
